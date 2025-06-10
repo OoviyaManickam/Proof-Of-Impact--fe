@@ -2,16 +2,99 @@
 
 import { BoxReveal } from "@/components/magicui/box-reveal";
 import Navbar from "@/components/navbar";
-import { useState } from "react";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 
 export default function ShowPOIPage() {
+  const router = useRouter();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [amount, setAmount] = useState("");
+  const [beneficiary, setBeneficiary] = useState("");
+  const [invoices, setInvoices] = useState<FileList | null>(null);
+  const [photos, setPhotos] = useState<FileList | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const isFormValid = () => {
+    return (
+      title.trim() !== "" &&
+      description.trim() !== "" &&
+      beneficiary.trim() !== "" &&
+      startDate !== "" &&
+      endDate !== "" &&
+      location.trim() !== "" &&
+      amount !== "" &&
+      invoices?.length &&
+      photos?.length
+    );
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid()) return;
+
+    // Here you would typically handle the form submission
+    // For now, we'll just show the success dialog
+    setShowSuccess(true);
+  };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white relative">
       <Navbar />
       
+      <AnimatePresence>
+        {showSuccess && (
+          <>
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-8 z-50 w-[90%] max-w-md"
+            >
+              <button
+                onClick={() => router.push("/")}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="flex flex-col items-center text-center space-y-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                >
+                  <CheckCircle2 className="w-16 h-16 text-green-500" />
+                </motion.div>
+                <motion.h2
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-2xl font-bold text-gray-900"
+                >
+                  CSR Activity Attested On-Chain
+                </motion.h2>
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-gray-600"
+                >
+                  Your impact has been successfully recorded
+                </motion.p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] pt-16">
         {/* Left Side - Box Reveal */}
         <div className="w-full md:w-[40%] p-8 md:p-12 flex items-start justify-center md:sticky md:top-16 h-fit">
@@ -38,7 +121,7 @@ export default function ShowPOIPage() {
                 From Action to Proof — Make It Count
               </h2>
               
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                     Project Title
@@ -46,7 +129,10 @@ export default function ShowPOIPage() {
                   <input
                     type="text"
                     id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    required
                   />
                 </div>
 
@@ -57,7 +143,25 @@ export default function ShowPOIPage() {
                   <textarea
                     id="description"
                     rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="beneficiary" className="block text-sm font-medium text-gray-700 mb-1">
+                    Beneficiary
+                  </label>
+                  <input
+                    type="text"
+                    id="beneficiary"
+                    value={beneficiary}
+                    onChange={(e) => setBeneficiary(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    required
+                    
                   />
                 </div>
 
@@ -72,6 +176,7 @@ export default function ShowPOIPage() {
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                      required
                     />
                   </div>
                   <div>
@@ -84,6 +189,7 @@ export default function ShowPOIPage() {
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                      required
                     />
                   </div>
                 </div>
@@ -95,7 +201,10 @@ export default function ShowPOIPage() {
                   <input
                     type="text"
                     id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    required
                   />
                 </div>
 
@@ -106,7 +215,10 @@ export default function ShowPOIPage() {
                   <input
                     type="number"
                     id="amount"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    required
                   />
                 </div>
 
@@ -117,8 +229,10 @@ export default function ShowPOIPage() {
                   <input
                     type="file"
                     id="invoices"
+                    onChange={(e) => setInvoices(e.target.files)}
                     multiple
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                    required
                   />
                 </div>
 
@@ -129,9 +243,11 @@ export default function ShowPOIPage() {
                   <input
                     type="file"
                     id="photos"
+                    onChange={(e) => setPhotos(e.target.files)}
                     multiple
                     accept="image/*,video/*"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                    required
                   />
                 </div>
 
@@ -143,13 +259,14 @@ export default function ShowPOIPage() {
                     type="file"
                     id="docs"
                     multiple
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors font-medium"
+                  disabled={!isFormValid()}
+                  className="w-full bg-black text-white py-3 px-6 rounded-md transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 disabled:hover:bg-black"
                 >
                   Submit Proof
                 </button>

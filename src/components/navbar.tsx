@@ -30,10 +30,10 @@ export default function Navbar() {
               Show POI
             </Link>
             <Link
-              href="/dashboard"
+              href="/verify-poi"
               className="text-gray-600 ml-20 hover:text-gray-900 transition-colors"
             >
-              Dashboard
+              Verify POI
             </Link>
             <Link
               href="/profile"

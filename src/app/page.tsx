@@ -42,7 +42,7 @@ export default function HomePage() {
               {/* Decorative line */}
               <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full" />
             </div>
-            <div className="space-y-2 relative z-10">
+            <div className="space-y-2 pt-5 relative z-10">
               <p className="text-xl sm:text-2xl text-gray-600 drop-shadow-sm">
                 Turning Corporate Promises into Public Proof
               </p>
