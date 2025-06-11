@@ -4,7 +4,7 @@ import { BoxReveal } from "@/components/magicui/box-reveal";
 import Navbar from "@/components/navbar";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Calendar, X, ThumbsUp, ThumbsDown, Image, FileText, IndianRupee } from "lucide-react";
+import { MapPin, Calendar, X, ThumbsUp, ThumbsDown, Image, FileText, IndianRupee, CheckCircle2 } from "lucide-react";
 import { POI_CONTRACT_ADDRESS, POI_ABI } from "@/abi";
 import { createPublicClient, custom, createWalletClient } from 'viem';
 import { seiTestnet } from 'viem/chains';
@@ -206,6 +206,8 @@ export default function VerifyPOIPage() {
   const [realProjects, setRealProjects] = useState<ProjectSummary[]>([]);
   const [voting, setVoting] = useState(false);
   const [voteError, setVoteError] = useState<string | null>(null);
+  const [voteTxHash, setVoteTxHash] = useState<string | null>(null);
+  const [showVoteSuccess, setShowVoteSuccess] = useState(false);
 
   const handleVerification = (activityId: number) => {
     setActivities(activities.map(activity => 
@@ -327,21 +329,19 @@ export default function VerifyPOIPage() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             transport: custom(ethWin.ethereum as any),
           });
-          await client.writeContract({
+          const txHash = await client.writeContract({
             address: POI_CONTRACT_ADDRESS as `0x${string}`,
             abi: POI_ABI,
             functionName: 'voteProject',
             account: address as `0x${string}`,
             args: [BigInt(activity.id), vote === 'yes'],
           });
-          setShowThankYou(true);
+          setVoteTxHash(typeof txHash === 'string' ? txHash : String(txHash));
+          setShowVoteSuccess(true);
         } catch (err: unknown) {
           setVoteError(err instanceof Error ? err.message : String(err));
         }
         setVoting(false);
-        setTimeout(() => {
-          onClose();
-        }, 2000);
       } else {
         // Dummy activity: just update local state
         setShowThankYou(true);
@@ -365,7 +365,31 @@ export default function VerifyPOIPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative transform rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl"
             >
-              {showThankYou ? (
+              {showVoteSuccess ? (
+                <div className="p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4"
+                  >
+                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                  </motion.div>
+                  <h3 className="text-2xl font-semibold text-gray-900">Your vote has been recorded on-chain</h3>
+                  {voteTxHash && (
+                    <div className="mt-2 text-green-700 text-xs break-all">
+                      Tx: <a href={`https://seitrace.com/tx/${voteTxHash}?chain=atlantic-2`} target="_blank" rel="noopener noreferrer">{voteTxHash}</a>
+                    </div>
+                  )}
+                  <button
+                    className="mt-6 px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+                    onClick={() => {
+                      setShowVoteSuccess(false);
+                      setVoteTxHash(null);
+                      onClose();
+                    }}
+                  >Close</button>
+                </div>
+              ) : showThankYou ? (
                 <div className="p-8 text-center">
                   <motion.div
                     initial={{ scale: 0 }}
