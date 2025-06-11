@@ -2,9 +2,12 @@
 
 import { BoxReveal } from "@/components/magicui/box-reveal";
 import Navbar from "@/components/navbar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Calendar, X, ThumbsUp, ThumbsDown, Image, FileText, IndianRupee } from "lucide-react";
+import { POI_CONTRACT_ADDRESS, POI_ABI } from "@/abi";
+import { createPublicClient, custom } from 'viem';
+import { seiTestnet } from 'viem/chains';
 
 // Mock data for CSR activities
 const mockCsrActivities = [
@@ -176,9 +179,31 @@ interface VotingModalProps {
   onClose: () => void;
 }
 
+interface ProjectSummary {
+  id: number;
+  title: string;
+  description: string;
+  company: string;
+  amount: number;
+  status: string;
+  approvals: number;
+  rejections: number;
+}
+
+// Minimal local type for EthereumProvider to satisfy viem custom transport
+type EthereumProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on?: (...args: unknown[]) => void;
+  removeListener?: (...args: unknown[]) => void;
+};
+
 export default function VerifyPOIPage() {
   const [activities, setActivities] = useState(mockCsrActivities);
   const [selectedActivity, setSelectedActivity] = useState<typeof mockCsrActivities[0] | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isDaoMember, setIsDaoMember] = useState<boolean | null>(null);
+  const [checkingDao, setCheckingDao] = useState(false);
+  const [realProjects, setRealProjects] = useState<ProjectSummary[]>([]);
 
   const handleVerification = (activityId: number) => {
     setActivities(activities.map(activity => 
@@ -187,6 +212,94 @@ export default function VerifyPOIPage() {
         : activity
     ));
   };
+
+  // Connect MetaMask wallet
+  const connectWallet = async () => {
+    try {
+      const ethWin = window as Window & { ethereum?: unknown };
+      if (!ethWin.ethereum) {
+        alert('MetaMask is not installed');
+        return null;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const accounts = await (ethWin.ethereum as any).request({ method: 'eth_requestAccounts' });
+      setWalletAddress(accounts[0]);
+      return accounts[0];
+    } catch {
+      alert('Failed to connect wallet');
+      return null;
+    }
+  };
+
+  // Check DAO membership
+  const handleCheckDaoMember = async () => {
+    setCheckingDao(true);
+    let address = walletAddress;
+    if (!address) {
+      address = await connectWallet();
+      if (!address) {
+        setCheckingDao(false);
+        return;
+      }
+    }
+    try {
+      const client = createPublicClient({
+        chain: seiTestnet,
+        transport: custom((window as Window & { ethereum?: unknown }).ethereum as EthereumProvider),
+      });
+      const result = await client.readContract({
+        address: POI_CONTRACT_ADDRESS as `0x${string}`,
+        abi: POI_ABI,
+        functionName: 'isDAOMember',
+        args: [address as `0x${string}`],
+      });
+      setIsDaoMember(Boolean(result));
+    } catch {
+      alert('Error checking DAO membership');
+    }
+    setCheckingDao(false);
+  };
+
+  // Fetch real projects from contract
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const client = createPublicClient({
+          chain: seiTestnet,
+          transport: custom((window as Window & { ethereum?: unknown }).ethereum as EthereumProvider),
+        });
+        const totalProjects = await client.readContract({
+          address: POI_CONTRACT_ADDRESS as `0x${string}`,
+          abi: POI_ABI,
+          functionName: 'getTotalProjects',
+        });
+        const total = Number(totalProjects);
+        const projects: ProjectSummary[] = [];
+        for (let i = 1; i <= total; i++) {
+          try {
+            const summary = await client.readContract({
+              address: POI_CONTRACT_ADDRESS as `0x${string}`,
+              abi: POI_ABI,
+              functionName: 'getProjectSummary',
+              args: [BigInt(i)],
+            });
+            projects.push({
+              id: i,
+              title: summary[0] as string,
+              description: summary[1] as string,
+              company: summary[2] as string,
+              amount: Number(summary[3]),
+              status: summary[4] === 1 ? 'Approved' : summary[4] === 2 ? 'Rejected' : 'Pending Verification',
+              approvals: Number(summary[5]),
+              rejections: Number(summary[6]),
+            });
+          } catch {}
+        }
+        setRealProjects(projects);
+      } catch {}
+    };
+    fetchProjects();
+  }, []);
 
   const VotingModal = ({ activity, onClose }: VotingModalProps) => {
     const [vote, setVote] = useState<"yes" | "no" | null>(null);
@@ -399,6 +512,22 @@ export default function VerifyPOIPage() {
               <div className="flex items-center text-black font-medium">
                 Verify Here <span className="ml-2">→</span>
               </div>
+              <div className="pt-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">DAO Membership</h2>
+                <button
+                  onClick={handleCheckDaoMember}
+                  className="bg-black text-white px-5 py-2 rounded-lg mb-2 shadow transition-transform transform hover:scale-105 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black/50"
+                  disabled={checkingDao}
+                >
+                  {checkingDao ? 'Checking...' : 'Check if you are DAO member'}
+                </button>
+                {isDaoMember === true && (
+                  <div className="text-green-700 text-sm">You are a DAO member! You can vote below.</div>
+                )}
+                {isDaoMember === false && (
+                  <div className="text-red-700 text-sm">You are not a DAO member. Voting is disabled.</div>
+                )}
+              </div>
             </div>
           </BoxReveal>
         </div>
@@ -406,7 +535,8 @@ export default function VerifyPOIPage() {
         {/* Right Side - CSR Activity Cards */}
         <div className="w-full md:w-[60%] p-8 md:p-12 bg-gray-50">
           <div className="columns-1 md:columns-2 gap-6 space-y-6">
-            {activities.map((activity) => (
+            {/* Show only first 4 dummy activities */}
+            {activities.slice(0, 4).map((activity) => (
               <motion.div
                 key={activity.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -415,8 +545,8 @@ export default function VerifyPOIPage() {
                 className="break-inside-avoid"
               >
                 <div
-                  onClick={() => setSelectedActivity(activity)}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer"
+                  onClick={() => isDaoMember ? setSelectedActivity(activity) : null}
+                  className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden ${!isDaoMember ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
                 >
                   <div className="p-6 space-y-4">
                     <div className="flex justify-between items-start">
@@ -440,7 +570,50 @@ export default function VerifyPOIPage() {
                         {activity.beneficiary}
                       </div>
                     </div>
-                    <button className="w-full mt-4 bg-black/5 hover:bg-black/10 text-black font-medium py-2 px-4 rounded-lg transition-colors">
+                    <button className="w-full mt-4 bg-black/5 hover:bg-black/10 text-black font-medium py-2 px-4 rounded-lg transition-colors" disabled={!isDaoMember}>
+                      View & Vote
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+            {/* Real projects from contract */}
+            {realProjects.map((project) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="break-inside-avoid"
+              >
+                <div
+                  className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden ${!isDaoMember ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+                >
+                  <div className="p-6 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xl font-semibold text-gray-900">{project.title}</h3>
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        project.status === "Approved" 
+                          ? "bg-green-100 text-green-800"
+                          : project.status === "Rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-600">{project.description}</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {project.company}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <span className="h-4 w-4 mr-2">💰</span>
+                        {project.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                      </div>
+                    </div>
+                    <button className="w-full mt-4 bg-black/5 hover:bg-black/10 text-black font-medium py-2 px-4 rounded-lg transition-colors" disabled={!isDaoMember}>
                       View & Vote
                     </button>
                   </div>
