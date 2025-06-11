@@ -22,6 +22,8 @@ export default function ShowPOIPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const pinataApiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY || "";
   const pinataApiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET || "";
+  const [invoiceLinks, setInvoiceLinks] = useState<string[]>([]);
+  const [photoLinks, setPhotoLinks] = useState<string[]>([]);
 
   const isFormValid = () => {
     return (
@@ -40,37 +42,35 @@ export default function ShowPOIPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!isFormValid()) return;
-
-    if (!pinataApiKey || !pinataApiSecret) {
-      alert("Pinata API Key/Secret not set in .env");
-      return;
-    }
-
-    // Upload invoices to Pinata
-    const invoiceHashes: string[] = [];
-    if (invoices) {
-      for (let i = 0; i < invoices.length; i++) {
-        const file = invoices[i];
-        const res = await uploadFileToPinata(file, pinataApiKey, pinataApiSecret);
-        invoiceHashes.push(res.IpfsHash);
-        console.log(`Invoice uploaded: https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`);
-      }
-    }
-
-    // Upload photos to Pinata
-    const photoHashes: string[] = [];
-    if (photos) {
-      for (let i = 0; i < photos.length; i++) {
-        const file = photos[i];
-        const res = await uploadFileToPinata(file, pinataApiKey, pinataApiSecret);
-        photoHashes.push(res.IpfsHash);
-        console.log(`Photo uploaded: https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`);
-      }
-    }
-
-    // Here you would typically handle the form submission, e.g., send hashes to your backend or smart contract
-    // For now, we'll just show the success dialog
     setShowSuccess(true);
+  };
+
+  const handleInvoicesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    setInvoices(files);
+    if (!files) return;
+    const links: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const res = await uploadFileToPinata(file, pinataApiKey, pinataApiSecret);
+      const url = `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`;
+      links.push(url);
+    }
+    setInvoiceLinks(links);
+  };
+
+  const handlePhotosChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    setPhotos(files);
+    if (!files) return;
+    const links: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const res = await uploadFileToPinata(file, pinataApiKey, pinataApiSecret);
+      const url = `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`;
+      links.push(url);
+    }
+    setPhotoLinks(links);
   };
 
   return (
@@ -258,11 +258,20 @@ export default function ShowPOIPage() {
                   <input
                     type="file"
                     id="invoices"
-                    onChange={(e) => setInvoices(e.target.files)}
+                    onChange={handleInvoicesChange}
                     multiple
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
                     required
                   />
+                  {invoiceLinks.length > 0 && (
+                    <div className="mt-2 text-xs text-blue-700 space-y-1">
+                      {invoiceLinks.map((link, idx) => (
+                        <div key={idx} className="truncate">
+                          <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -272,12 +281,21 @@ export default function ShowPOIPage() {
                   <input
                     type="file"
                     id="photos"
-                    onChange={(e) => setPhotos(e.target.files)}
+                    onChange={handlePhotosChange}
                     multiple
                     accept="image/*,video/*"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
                     required
                   />
+                  {photoLinks.length > 0 && (
+                    <div className="mt-2 text-xs text-blue-700 space-y-1">
+                      {photoLinks.map((link, idx) => (
+                        <div key={idx} className="truncate">
+                          <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <button
