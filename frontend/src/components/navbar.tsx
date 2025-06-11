@@ -1,17 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "./ui/button";
-import { useState } from "react";
+import { UserButton } from "@civic/auth-web3/react";
 
 export default function Navbar() {
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
-
-  const handleConnectWallet = () => {
-    setIsWalletConnected(true);
-    // Add wallet connection logic here
-  };
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,20 +43,13 @@ export default function Navbar() {
 
           {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
-            {!isWalletConnected && (
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Log In
-              </Link>
-            )}
-            <Button
-              onClick={handleConnectWallet}
-              className="bg-black text-white hover:bg-gray-800 transition-colors"
+            <Link
+              href="/login"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Connect Wallet
-            </Button>
+              connect your wallet here ->
+            </Link>
+            <UserButton />
           </div>
         </div>
       </div>
