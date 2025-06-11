@@ -578,48 +578,68 @@ export default function VerifyPOIPage() {
               </motion.div>
             ))}
             {/* Real projects from contract */}
-            {realProjects.map((project) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="break-inside-avoid"
-              >
-                <div
-                  className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden ${!isDaoMember ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+            {realProjects.map((project) => {
+              // Map real project to dummy activity shape for VotingModal
+              const mappedActivity = {
+                id: project.id,
+                title: project.title,
+                description: project.description,
+                fullDescription: project.description, // No fullDescription onchain, fallback
+                beneficiary: project.company,
+                date: '', // Not available
+                dateRange: '', // Not available
+                company: project.company,
+                location: '', // Not available
+                amount: project.amount,
+                images: [], // Not available
+                documents: [], // Not available
+                invoiceDetails: [], // Not available
+                status: project.status,
+              };
+              return (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="break-inside-avoid"
                 >
-                  <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-xl font-semibold text-gray-900">{project.title}</h3>
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        project.status === "Approved" 
-                          ? "bg-green-100 text-green-800"
-                          : project.status === "Rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                        {project.status}
-                      </span>
-                    </div>
-                    <p className="text-gray-600">{project.description}</p>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {project.company}
+                  <div
+                    onClick={() => isDaoMember ? setSelectedActivity(mappedActivity) : null}
+                    className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden ${!isDaoMember ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+                  >
+                    <div className="p-6 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-xl font-semibold text-gray-900">{project.title}</h3>
+                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                          project.status === "Approved" 
+                            ? "bg-green-100 text-green-800"
+                            : project.status === "Rejected"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {project.status}
+                        </span>
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <span className="h-4 w-4 mr-2">💰</span>
-                        {project.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                      <p className="text-gray-600">{project.description}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {project.company}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <span className="h-4 w-4 mr-2">💰</span>
+                          {project.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                        </div>
                       </div>
+                      <button className="w-full mt-4 bg-black/5 hover:bg-black/10 text-black font-medium py-2 px-4 rounded-lg transition-colors" disabled={!isDaoMember}>
+                        View & Vote
+                      </button>
                     </div>
-                    <button className="w-full mt-4 bg-black/5 hover:bg-black/10 text-black font-medium py-2 px-4 rounded-lg transition-colors" disabled={!isDaoMember}>
-                      View & Vote
-                    </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
