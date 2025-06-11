@@ -1,4 +1,4 @@
-import { CivicAuthProvider } from '@civic/auth-web3/nextjs'
+import { Providers } from "@/components/Providers";
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -18,10 +18,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-      <CivicAuthProvider>
-        {children}
-    </CivicAuthProvider>
-        </body>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   )
 }
