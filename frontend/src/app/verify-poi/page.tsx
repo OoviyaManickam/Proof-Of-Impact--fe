@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Calendar, X, ThumbsUp, ThumbsDown, Image, FileText, IndianRupee } from "lucide-react";
 import { POI_CONTRACT_ADDRESS, POI_ABI } from "@/abi";
-import { createPublicClient, custom } from 'viem';
+import { createPublicClient, custom, createWalletClient } from 'viem';
 import { seiTestnet } from 'viem/chains';
 
 // Mock data for CSR activities
@@ -204,6 +204,8 @@ export default function VerifyPOIPage() {
   const [isDaoMember, setIsDaoMember] = useState<boolean | null>(null);
   const [checkingDao, setCheckingDao] = useState(false);
   const [realProjects, setRealProjects] = useState<ProjectSummary[]>([]);
+  const [voting, setVoting] = useState(false);
+  const [voteError, setVoteError] = useState<string | null>(null);
 
   const handleVerification = (activityId: number) => {
     setActivities(activities.map(activity => 
@@ -306,15 +308,50 @@ export default function VerifyPOIPage() {
     const [comment, setComment] = useState("");
     const [showThankYou, setShowThankYou] = useState(false);
 
-    const handleVoteSubmit = () => {
+    const handleVoteSubmit = async () => {
       if (!vote) return;
-      setShowThankYou(true);
-      if (vote === "yes") {
-        handleVerification(activity.id);
+      setVoteError(null);
+      // If this is a real project (from contract), call voteProject
+      const isRealProject = typeof activity.company === 'string' && activity.company.startsWith('0x');
+      if (isRealProject) {
+        setVoting(true);
+        try {
+          let address = walletAddress;
+          if (!address) {
+            address = await connectWallet();
+            if (!address) throw new Error('Wallet not connected');
+          }
+          const ethWin = window as Window & { ethereum?: unknown };
+          const client = createWalletClient({
+            chain: seiTestnet,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            transport: custom(ethWin.ethereum as any),
+          });
+          await client.writeContract({
+            address: POI_CONTRACT_ADDRESS as `0x${string}`,
+            abi: POI_ABI,
+            functionName: 'voteProject',
+            account: address as `0x${string}`,
+            args: [BigInt(activity.id), vote === 'yes'],
+          });
+          setShowThankYou(true);
+        } catch (err: unknown) {
+          setVoteError(err instanceof Error ? err.message : String(err));
+        }
+        setVoting(false);
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      } else {
+        // Dummy activity: just update local state
+        setShowThankYou(true);
+        if (vote === "yes") {
+          handleVerification(activity.id);
+        }
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       }
-      setTimeout(() => {
-        onClose();
-      }, 2000);
     };
 
     return (
@@ -476,11 +513,14 @@ export default function VerifyPOIPage() {
                           
                           <button
                             onClick={handleVoteSubmit}
-                            disabled={!vote}
+                            disabled={!vote || voting}
                             className="w-full bg-black text-white p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800"
                           >
-                            Submit Vote
+                            {voting ? 'Submitting...' : 'Submit Vote'}
                           </button>
+                          {voteError && (
+                            <div className="text-red-600 text-sm mt-2">{voteError}</div>
+                          )}
                         </div>
                       </div>
                     </div>
