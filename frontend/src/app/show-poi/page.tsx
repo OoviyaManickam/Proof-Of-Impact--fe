@@ -29,24 +29,23 @@ export default function ShowPOIPage() {
   const [photoLinks, setPhotoLinks] = useState<string[]>([]);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const connectWallet = async () => {
-    setConnecting(true);
     try {
       const ethWin = window as Window & { ethereum?: unknown };
       if (!ethWin.ethereum) {
         alert('MetaMask is not installed');
-        setConnecting(false);
-        return;
+        return null;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const accounts = await (ethWin.ethereum as any).request({ method: 'eth_requestAccounts' });
       setWalletAddress(accounts[0]);
+      return accounts[0];
     } catch {
       alert('Failed to connect wallet');
+      return null;
     }
-    setConnecting(false);
   };
 
   const isFormValid = () => {
@@ -65,11 +64,12 @@ export default function ShowPOIPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!walletAddress) {
-      alert('Please connect your MetaMask wallet first.');
-      return;
-    }
     if (!isFormValid()) return;
+    let address = walletAddress;
+    if (!address) {
+      address = await connectWallet();
+      if (!address) return;
+    }
     const invoiceHash = invoiceLinks[0]?.replace("https://gateway.pinata.cloud/ipfs/", "") || "";
     const mediaHash = photoLinks[0]?.replace("https://gateway.pinata.cloud/ipfs/", "") || "";
     try {
@@ -83,7 +83,7 @@ export default function ShowPOIPage() {
         address: POI_CONTRACT_ADDRESS as `0x${string}`,
         abi: POI_ABI,
         functionName: "submitProject",
-        account: walletAddress as `0x${string}`,
+        account: address as `0x${string}`,
         args: [
           title,
           description,
@@ -98,6 +98,7 @@ export default function ShowPOIPage() {
       });
       setTxHash(hash);
       setShowSuccess(true);
+      setModalOpen(true);
     } catch (err: unknown) {
       alert("Error submitting project: " + (err instanceof Error ? err.message : String(err)));
     }
@@ -369,18 +370,27 @@ export default function ShowPOIPage() {
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto mt-4 mb-4 p-4 bg-blue-50 border border-blue-200 rounded flex flex-col items-center">
-        {!walletAddress ? (
-          <button onClick={connectWallet} className="bg-blue-600 text-white px-4 py-2 rounded" disabled={connecting}>
-            {connecting ? 'Connecting...' : 'Connect MetaMask Wallet'}
-          </button>
-        ) : (
-          <span className="text-xs text-gray-700">Connected: {walletAddress}</span>
+      {/* Modal for transaction status */}
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+          >
+            <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center">
+              <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
+              <h2 className="text-xl font-bold mb-2">Transaction Submitted</h2>
+              {txHash && (
+                <div className="text-xs text-green-700 mb-2">Tx: <a href={`https://seitrace.com/tx/${txHash}?chain=atlantic-2`} target="_blank" rel="noopener noreferrer">{txHash}</a></div>
+              )}
+              <div className="text-gray-700 mb-4">Your CSR activity has been attested on-chain!</div>
+              <button onClick={() => setModalOpen(false)} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded">Close</button>
+            </div>
+          </motion.div>
         )}
-        {txHash && (
-          <div className="mt-2 text-xs text-green-700">Tx: <a href={`https://seitrace.com/tx/${txHash}`} target="_blank" rel="noopener noreferrer">{txHash}</a></div>
-        )}
-      </div>
+      </AnimatePresence>
     </main>
   );
 }
