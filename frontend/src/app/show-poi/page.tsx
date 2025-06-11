@@ -6,6 +6,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import { uploadFileToPinata } from "@/lib/pinata";
 
 export default function ShowPOIPage() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function ShowPOIPage() {
   const [invoices, setInvoices] = useState<FileList | null>(null);
   const [photos, setPhotos] = useState<FileList | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const pinataApiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY || "";
+  const pinataApiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET || "";
 
   const isFormValid = () => {
     return (
@@ -38,7 +41,34 @@ export default function ShowPOIPage() {
     e.preventDefault();
     if (!isFormValid()) return;
 
-    // Here you would typically handle the form submission
+    if (!pinataApiKey || !pinataApiSecret) {
+      alert("Pinata API Key/Secret not set in .env");
+      return;
+    }
+
+    // Upload invoices to Pinata
+    const invoiceHashes: string[] = [];
+    if (invoices) {
+      for (let i = 0; i < invoices.length; i++) {
+        const file = invoices[i];
+        const res = await uploadFileToPinata(file, pinataApiKey, pinataApiSecret);
+        invoiceHashes.push(res.IpfsHash);
+        console.log(`Invoice uploaded: https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`);
+      }
+    }
+
+    // Upload photos to Pinata
+    const photoHashes: string[] = [];
+    if (photos) {
+      for (let i = 0; i < photos.length; i++) {
+        const file = photos[i];
+        const res = await uploadFileToPinata(file, pinataApiKey, pinataApiSecret);
+        photoHashes.push(res.IpfsHash);
+        console.log(`Photo uploaded: https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`);
+      }
+    }
+
+    // Here you would typically handle the form submission, e.g., send hashes to your backend or smart contract
     // For now, we'll just show the success dialog
     setShowSuccess(true);
   };
@@ -46,7 +76,6 @@ export default function ShowPOIPage() {
   return (
     <main className="min-h-screen bg-white relative">
       <Navbar />
-      
       <AnimatePresence>
         {showSuccess && (
           <>
@@ -248,18 +277,6 @@ export default function ShowPOIPage() {
                     accept="image/*,video/*"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="docs" className="block text-sm font-medium text-gray-700 mb-1">
-                    Additional Docs
-                  </label>
-                  <input
-                    type="file"
-                    id="docs"
-                    multiple
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
                   />
                 </div>
 
