@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { uploadFileToPinata } from "@/lib/pinata";
+import { POI_CONTRACT_ADDRESS, POI_ABI } from "@/abi";
+import { createWalletClient, custom } from 'viem';
+import { seiTestnet } from 'viem/chains';
 
 export default function ShowPOIPage() {
   const router = useRouter();
@@ -24,6 +27,27 @@ export default function ShowPOIPage() {
   const pinataApiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET || "";
   const [invoiceLinks, setInvoiceLinks] = useState<string[]>([]);
   const [photoLinks, setPhotoLinks] = useState<string[]>([]);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
+
+  const connectWallet = async () => {
+    setConnecting(true);
+    try {
+      const ethWin = window as Window & { ethereum?: unknown };
+      if (!ethWin.ethereum) {
+        alert('MetaMask is not installed');
+        setConnecting(false);
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const accounts = await (ethWin.ethereum as any).request({ method: 'eth_requestAccounts' });
+      setWalletAddress(accounts[0]);
+    } catch {
+      alert('Failed to connect wallet');
+    }
+    setConnecting(false);
+  };
 
   const isFormValid = () => {
     return (
@@ -41,8 +65,42 @@ export default function ShowPOIPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!walletAddress) {
+      alert('Please connect your MetaMask wallet first.');
+      return;
+    }
     if (!isFormValid()) return;
-    setShowSuccess(true);
+    const invoiceHash = invoiceLinks[0]?.replace("https://gateway.pinata.cloud/ipfs/", "") || "";
+    const mediaHash = photoLinks[0]?.replace("https://gateway.pinata.cloud/ipfs/", "") || "";
+    try {
+      const ethWin = window as Window & { ethereum?: unknown };
+      const client = createWalletClient({
+        chain: seiTestnet,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        transport: custom(ethWin.ethereum as any),
+      });
+      const hash = await client.writeContract({
+        address: POI_CONTRACT_ADDRESS as `0x${string}`,
+        abi: POI_ABI,
+        functionName: "submitProject",
+        account: walletAddress as `0x${string}`,
+        args: [
+          title,
+          description,
+          BigInt(Math.floor(new Date(startDate).getTime() / 1000)),
+          BigInt(Math.floor(new Date(endDate).getTime() / 1000)),
+          location,
+          BigInt(amount),
+          invoiceHash,
+          mediaHash,
+          beneficiary,
+        ],
+      });
+      setTxHash(hash);
+      setShowSuccess(true);
+    } catch (err: unknown) {
+      alert("Error submitting project: " + (err instanceof Error ? err.message : String(err)));
+    }
   };
 
   const handleInvoicesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,6 +367,19 @@ export default function ShowPOIPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-xl mx-auto mt-4 mb-4 p-4 bg-blue-50 border border-blue-200 rounded flex flex-col items-center">
+        {!walletAddress ? (
+          <button onClick={connectWallet} className="bg-blue-600 text-white px-4 py-2 rounded" disabled={connecting}>
+            {connecting ? 'Connecting...' : 'Connect MetaMask Wallet'}
+          </button>
+        ) : (
+          <span className="text-xs text-gray-700">Connected: {walletAddress}</span>
+        )}
+        {txHash && (
+          <div className="mt-2 text-xs text-green-700">Tx: <a href={`https://seitrace.com/tx/${txHash}`} target="_blank" rel="noopener noreferrer">{txHash}</a></div>
+        )}
       </div>
     </main>
   );
