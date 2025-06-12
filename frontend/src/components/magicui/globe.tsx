@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const MOVEMENT_DAMPING = 1400;
-//s
+//ss
 const GLOBE_CONFIG: COBEOptions = {
   width: 800,
   height: 800,
