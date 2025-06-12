@@ -38,7 +38,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="relative">
               <FlipText className="text-6xl sm:text-5xl lg:text-8xl font-black text-gray-900 font-display tracking-tighter">
-                proof of impact
+                proof of impact⭐
               </FlipText>
               
             </div>
