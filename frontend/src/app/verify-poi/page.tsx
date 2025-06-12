@@ -1,6 +1,5 @@
 "use client";
 
-import { BoxReveal } from "@/components/magicui/box-reveal";
 import Navbar from "@/components/navbar";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -565,7 +564,7 @@ export default function VerifyPOIPage() {
       <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] pt-16">
         {/* Left Side - Box Reveal */}
         <div className="w-full md:w-[40%] p-8 md:p-12 flex items-start justify-center md:sticky md:top-16 h-fit">
-          <BoxReveal boxColor="#000000" width="100%" duration={0.7}>
+        
             <div className="space-y-6 pt-8">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
                 You Witnessed the Impact — Now Verify It.
@@ -593,7 +592,7 @@ export default function VerifyPOIPage() {
                 )}
               </div>
             </div>
-          </BoxReveal>
+       
         </div>
 
         {/* Right Side - CSR Activity Cards */}
