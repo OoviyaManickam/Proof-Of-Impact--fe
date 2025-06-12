@@ -18,50 +18,44 @@ export default function Navbar() {
   }, [userContext.user]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            POI
+    <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md shadow-xl rounded-3xl border border-gray-200 px-4 py-2 max-w-5xl mx-auto flex items-center w-[95vw]" style={{boxShadow: '0 6px 32px 0 rgba(80,80,120,0.10)'}}>
+      <div className="flex justify-between items-center w-full">
+        {/* Logo */}
+        <Link href="/" className="text-2xl font-black text-gray-900 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-100 to-white shadow-sm hover:shadow-md transition-all">
+          POI
+        </Link>
+
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Link
+            href="/show-poi"
+            className="px-5 py-2 rounded-full bg-white shadow hover:shadow-lg text-gray-700 font-medium hover:bg-indigo-50 transition-all border border-gray-100"
+          >
+            Show POI
           </Link>
+          <Link
+            href="/verify-poi"
+            className="px-5 py-2 rounded-full bg-white shadow hover:shadow-lg text-gray-700 font-medium hover:bg-indigo-50 transition-all border border-gray-100"
+          >
+            Verify POI
+          </Link>
+          <Link
+            href="/"
+            className="px-5 py-2 rounded-full bg-white shadow hover:shadow-lg text-gray-700 font-medium hover:bg-indigo-50 transition-all border border-gray-100"
+          >
+            Profile
+          </Link>
+          <Link
+            href="/"
+            className="px-5 py-2 rounded-full bg-white shadow hover:shadow-lg text-gray-700 font-medium hover:bg-indigo-50 transition-all border border-gray-100"
+          >
+            About
+          </Link>
+        </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/show-poi"
-              className="text-gray-600 ml-20 hover:text-gray-900 transition-colors"
-            >
-              Show POI
-            </Link>
-            <Link
-              href="/verify-poi"
-              className="text-gray-600 ml-20 hover:text-gray-900 transition-colors"
-            >
-              Verify POI
-            </Link>
-            <Link
-              href="/profile"
-              className="text-gray-600 ml-20 hover:text-gray-900 transition-colors"
-            >
-              Profile
-            </Link>
-            <Link
-              href="/about"
-              className="text-gray-600 ml-20 hover:text-gray-900 transition-colors"
-            >
-              About
-            </Link>
-          </div>
-
-          {/* Auth Buttons */}
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/login"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              connect your wallet here -&gt;
-            </Link>
+        {/* Auth Buttons */}
+        <div className="flex items-center space-x-3">
+          <div className="ml-1">
             <UserButton />
           </div>
         </div>

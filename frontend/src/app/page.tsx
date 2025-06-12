@@ -37,11 +37,10 @@ export default function HomePage() {
         <div className="relative text-center space-y-8 max-w-4xl">
           <div className="space-y-4">
             <div className="relative">
-              <FlipText className="text-6xl sm:text-7xl lg:text-8xl font-black text-gray-900 font-display tracking-tighter">
-                Proof Of Impact
+              <FlipText className="text-6xl sm:text-5xl lg:text-8xl font-black text-gray-900 font-display tracking-tighter">
+                proof of impact
               </FlipText>
-              {/* Decorative line */}
-              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black rounded-full" />
+              
             </div>
             <div className="space-y-2 pt-5 relative z-10">
               <p className="text-xl sm:text-2xl text-gray-600 drop-shadow-sm">
@@ -58,7 +57,7 @@ export default function HomePage() {
               href="/show-poi"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium rounded-md text-white bg-black hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
             >
-              Show proofs
+              Attest your impact 
             </Link>
             <Link
               href="/about"
