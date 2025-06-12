@@ -38,7 +38,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="relative">
               <FlipText className="text-6xl sm:text-5xl lg:text-8xl font-black text-gray-900 font-display tracking-tighter">
-                proof of impact⭐
+                proof of impact
               </FlipText>
               
             </div>
@@ -57,7 +57,7 @@ export default function HomePage() {
               href="/show-poi"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium rounded-md text-white bg-black hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
             >
-              Attest your impact ✅
+              Attest your impact 
             </Link>
             <Link
               href="/about"
