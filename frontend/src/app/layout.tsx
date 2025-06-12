@@ -1,9 +1,13 @@
 import { Providers } from "@/components/Providers";
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Rowdies } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin'] })
+const rowdies = Rowdies({ 
+  weight: ['300', '400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Proof Of Impact',
@@ -17,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={rowdies.className}>
         <Providers>
           {children}
         </Providers>

@@ -5,6 +5,7 @@ import Navbar from "@/components/navbar";
 import Link from "next/link";
 import Image from "next/image";
 import Footer from "@/components/footer";
+import { Globe } from "@/components/magicui/globe";
 
 export default function HomePage() {
   return (
@@ -135,8 +136,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Globe Section */}
+      <section className="relative pt-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50/50 to-white pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-5">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Creating Impact Worldwide
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Join thousands of companies making verifiable social impact across the globe. Every proof adds to our growing network of positive change.
+            </p>
+          </div>
+
+          <div className="relative h-[600px] ">
+            <Globe className="opacity-90" />
+            
+            {/* Stats */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="grid grid-cols-3 gap-8 mt-80">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-gray-900 mb-2">150+</div>
+                  <div className="text-gray-600">Countries Reached</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-gray-900 mb-2">$2B+</div>
+                  <div className="text-gray-600">Impact Value</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-gray-900 mb-2">10K+</div>
+                  <div className="text-gray-600">Projects Verified</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-30 bg-gradient-to-b from-white to-gray-50">
+      <section className="pb-20 pt-12 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
